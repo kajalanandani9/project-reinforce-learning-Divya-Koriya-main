@@ -1,12 +1,12 @@
-[![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-22041afd0340ce965d47ae6ef1cefeee28c7c493a6346c4f15d667ab976d596c.svg)](https://classroom.github.com/a/Y9wdwI_n)
-
-# 🚁 Autonomous Drone Landing System — Deep Reinforcement Learning
+# 📦 Predicting E-Commerce Delivery Delays — Explainable Machine Learning and Ensemble Learning
 
 <div align="center">
 
-![Python](https://img.shields.io/badge/Python-3.10.10-blue?logo=python)
-![TensorFlow](https://img.shields.io/badge/TensorFlow-2.20.0-orange?logo=tensorflow)
-![Gymnasium](https://img.shields.io/badge/Gymnasium-1.2.3-green)
+![Python](https://img.shields.io/badge/Python-3.x-blue?logo=python)
+![scikit--learn](https://img.shields.io/badge/scikit--learn-ML-orange?logo=scikitlearn)
+![LightGBM](https://img.shields.io/badge/LightGBM-Boosting-green)
+![CatBoost](https://img.shields.io/badge/CatBoost-Boosting-yellow)
+![SHAP](https://img.shields.io/badge/SHAP-Explainability-purple)
 ![License](https://img.shields.io/badge/License-Academic-lightgrey)
 
 </div>
@@ -17,353 +17,182 @@
 
 | Field | Details |
 |:---|:---|
-| **University** | SRH University |
-| **Student Name** | Divya Koriya|
-| **Matriculation Number** | 100002007 |
-| **Subject** | Reinforcement Learning |
-| **Project** | Project 2 — Autonomous Drone Landing (LunarLander) |
-| **Date** | 27 February 2026 |
+| **University** | SRH University Leipzig |
+| **Student Name** | Kajal Anandani |
+| **Matriculation Number** | 100001782 |
+| **Subject** | Master Thesis |
+| **Project** | Predicting E-Commerce Delivery Delays Using Explainable Machine Learning and Ensemble Learning |
+| **Date** | August 2026 |
 
 ---
 
 ## 📌 Project Overview
 
-This project implements a **Deep Q-Network (DQN)** agent to solve the autonomous drone landing problem using the `LunarLander-v3` Gymnasium environment as a digital twin.
+This project builds a **cost-sensitive, leakage-aware machine learning pipeline** to predict late e-commerce deliveries using the DataCo Supply Chain Dataset (180,519 orders).
 
-The agent learns to:
-- 🛬 Land safely on a charging pad
-- ⚡ Minimize fuel (battery) consumption
-- 💥 Avoid crashes that cause equipment damage and safety risks
+The pipeline:
+- 🔍 Detects and removes **data leakage** (features only known after delivery)
+- ⚖️ Balances the training data with **SMOTE**
+- 🧠 Trains and compares **Random Forest, LightGBM, and CatBoost**
+- 🤝 Combines them via **Voting** and **Stacking** ensembles
+- 💰 Evaluates models by **actual business cost**, not just F1 score
+- 🔎 Explains predictions using **SHAP**
+- 📊 Validates robustness via **bootstrap resampling** (1,000 iterations)
 
-> **Key Principle:** This project focuses on building a *responsible autonomous decision system*, not just maximizing a game score. Strong system design — monitoring, ethics, and deployment — is treated as equally important as model performance.
+> **Key Principle:** This project treats leakage-free evaluation and cost-sensitive decision-making as first-class concerns — not an afterthought to accuracy metrics.
 
 ---
 
 ## 🗂️ Repository Structure
 
 ```
-project-reinforce-learning/
+Code/
 │
-├── reinforcement_learning.ipynb   # Main Jupyter notebook (all code + outputs)
-├── lunar_lander_dqn.h5            # Saved trained model weights
-├── learning_curve.png             # Training reward curve plot
-├── monitoring_dashboard.png       # Operational monitoring simulation
-└── README.md                      # This file
+├── kajal_thesis.py    # Complete pipeline (exported from Google Colab)
+└── README.md            # This file
 ```
 
 ---
 
-## 🌍 Environment: LunarLander-v3
+## 🔗 Original Notebook
 
-The `LunarLander-v3` environment from [Gymnasium](https://gymnasium.farama.org/) simulates a lander descending onto a landing pad. It acts as a **digital twin** of a real warehouse drone system.
+The original Google Colab notebook (interactive version with all outputs) is available at:
+https://colab.research.google.com/drive/1iJfIUQXHBm-Mdur4jDuVzzoFNRtCDsb9
 
-### State Space (8 features)
+---
 
-| Index | Feature | Description |
-|:---:|:---|:---|
-| 0 | X Position | Horizontal position of the lander |
-| 1 | Y Position | Vertical height above ground |
-| 2 | X Velocity | Horizontal speed |
-| 3 | Y Velocity | Vertical speed (descent rate) |
-| 4 | Angle | Tilt/orientation of the lander |
-| 5 | Angular Velocity | Rotation speed |
-| 6 | Left Leg Contact | 1 if left leg touching ground |
-| 7 | Right Leg Contact | 1 if right leg touching ground |
+## 🌍 Data Source
 
-### Action Space (4 discrete actions)
-
-| Action | Description |
-|:---:|:---|
-| 0 | Do nothing (coast) |
-| 1 | Fire left engine (push right) |
-| 2 | Fire main engine (push up) |
-| 3 | Fire right engine (push left) |
-
-### Reward Structure
-
-| Event | Reward |
+| Field | Details |
 |:---|:---|
-| Safe landing on pad | +100 to +140 |
-| Crash | -100 |
-| Each leg contact with ground | +10 |
-| Each thruster fire (fuel cost) | -0.3 |
-| Episode solved threshold | ≥ 200 average |
+| **Dataset** | DataCo Supply Chain Dataset |
+| **Records** | 180,519 individual orders |
+| **Initial features** | 53 |
+| **Access method in code** | `google.colab.files.upload()` — interactive upload inside Google Colab |
 
 ---
 
-## 🤖 RL Problem Formulation
+## 🔧 Leakage Features Removed
 
-| RL Concept | LunarLander-v3 | Real Drone System |
-|:---|:---|:---|
-| **Agent** | Lander controller | Autonomous warehouse drone |
-| **Environment** | Physics simulator | Warehouse + real-world physics |
-| **State** | Position, velocity, angle, leg contacts | Drone pose + IMU + LiDAR sensors |
-| **Action** | Thruster commands (0–3) | Motor speed commands |
-| **Reward** | Safe landing + fuel efficiency | Successful dock + energy saved |
-| **Episode** | One complete descent attempt | One landing mission |
-
----
-
-## 🧠 Algorithm: Deep Q-Network (DQN)
-
-DQN uses a neural network to approximate Q-values — the expected cumulative reward for taking action `a` in state `s`:
-
-```
-Q(state, action) ≈ Neural Network(state) → [Q-value for each action]
-```
-
-### Key Components
-
-**1. Q-Network Architecture**
-```
-Input (8)  →  Dense(64, ReLU)  →  Dense(64, ReLU)  →  Output(4, Linear)
-```
-
-**2. ε-Greedy Exploration**
-- Starts fully exploratory (ε = 1.0)
-- Decays over time (ε × 0.995 per episode)
-- Floors at minimum exploration (ε = 0.01)
-
-**3. Experience Replay**
-- Stores past `(state, action, reward, next_state, done)` transitions
-- Random mini-batch sampling breaks temporal correlation
-- Buffer size: 10,000 transitions
-
-**4. Target Network**
-- Separate copy of Q-network updated every 20 episodes
-- Provides stable training targets, prevents divergence
-
-### Hyperparameters
-
-| Parameter | Value | Purpose |
-|:---|:---|:---|
-| Learning Rate | 0.001 | Adam optimizer step size |
-| Discount Factor γ | 0.99 | How much future rewards are valued |
-| ε Start | 1.0 | Begin fully exploratory |
-| ε Minimum | 0.01 | Always keep small exploration |
-| ε Decay | 0.995 | Per-episode decay rate |
-| Batch Size | 32 | Mini-batch training samples |
-| Replay Buffer | 10,000 | Past experience storage |
-| Target Update | Every 20 eps | Stable target network |
-| Max Steps/Episode | 500 | Cap for training speed |
-
----
-
-## 📈 Training Results
-
-Training ran for **150 episodes** on CPU (Python 3.10.10, TensorFlow 2.20.0).
-
-| Metric | Value |
+| Feature | Why it leaks |
 |:---|:---|
-| Total Episodes | 150 |
-| Best Score | 89.09 |
-| Final Average (last 100 eps) | -83.11 |
-| Score Improvement | ~59% over training |
-| Crashes (score ≤ -100) | 69 / 150 (46%) — mostly early episodes |
+| Delivery Status | Directly encodes the target (on-time vs. late) |
+| Days for Shipping (Real) | Only known after delivery completes |
+| Shipping Date | Assigned during fulfillment, not at order time |
+| Shipping Duration Differential | Computed from post-delivery data |
 
-### Learning Phases
+---
 
-| Phase | Episodes | Behaviour |
-|:---|:---|:---|
-| Pure Exploration | 1–50 | Random actions, scores -250 to -380, ε ≈ 1.0 decaying |
-| Policy Learning | 51–100 | ε = 0.01, scores improve -148 → +88, first non-crash episodes |
-| Steady Improvement | 101–150 | Average rises -204 → -83 (+59%), no late crashes |
+## 🤖 Models and Configuration
 
-> **Note:** 150 episodes demonstrates clear learning behaviour. Scores above 200 (fully solved) would require 500–1000+ episodes. This run was optimised for speed on CPU hardware.
+| Model | Key Hyperparameters |
+|:---|:---|
+| Random Forest | `n_estimators=100`, `random_state=42` |
+| LightGBM | `n_estimators=100`, `random_state=42` |
+| CatBoost | `iterations=200`, `random_state=42` |
+| Voting Ensemble | Equal weight (1/3 each) across the three base learners |
+| Stacking Ensemble | Logistic Regression meta-learner (`scikit-learn StackingClassifier`), default parameters |
+| PCA configuration | `n_components=0.90` (90% variance retained), `random_state=42` |
+| SMOTE | `random_state=42`, applied to training data only |
+
+Feature sets evaluated: **All Features (49)**, **Top 25**, **Top 15**, **PCA (90% variance)** — ranked via Random Forest feature importance.
+
+---
+
+## 📈 Training / Evaluation Results
+
+| Metric | Random Forest (Top 15) | Voting Ensemble | Stacking Ensemble |
+|:---|:---:|:---:|:---:|
+| F1 Score | 0.8865 | 0.7709 | **0.9126** |
+| ROC-AUC | 0.9622 | 0.9259 | **0.9699** |
+| Operational Cost (36,104 test orders) | \$7,859.99 | \$13,790.47 | **\$5,616.82** |
+
+| Finding | Value |
+|:---|:---|
+| Leakage-induced F1 inflation | 11.64 percentage points (1.0000 → 0.8836) |
+| Lowest-cost threshold (evaluated grid: 0.25–0.75) | **0.25** |
+| Cost reduction vs. default (0.50) threshold | 30.2% |
+| Cost reduction, Stacking vs. Voting | 59.3% |
+| Bootstrap 95% CI (Stacking ROC-AUC, 1,000 resamples) | [0.9684, 0.9714] |
+| Top SHAP feature | Scheduled shipping duration (mean SHAP value: 0.1257) |
+
+These values match Chapter 4 (Results) of the thesis PDF exactly.
 
 ---
 
 ## ⚙️ Setup & Installation
 
 ### Prerequisites
-
-- Python 3.10.10
+- Python 3.x (developed and run in Google Colab's default runtime)
 - pip
 
 ### Install Dependencies
 
+The notebook installs its extra dependencies directly in the first cell:
 ```bash
-pip install gymnasium[box2d] tensorflow numpy matplotlib
+pip install -q imbalanced-learn lightgbm catboost shap
 ```
+`pandas`, `numpy`, `matplotlib`, and `scikit-learn` come pre-installed in Google Colab.
 
-### Verify Versions
-
-```python
-import tensorflow as tf
-import gymnasium as gym
-import numpy as np
-
-print(tf.__version__)   # 2.20.0
-print(gym.__version__)  # 1.2.3
-print(np.__version__)   # 2.2.6
+To run outside Colab, install everything explicitly:
+```bash
+pip install pandas numpy matplotlib scikit-learn imbalanced-learn lightgbm catboost shap
 ```
-
-### Known Issue
-
-> ⚠️ `LunarLander-v2` is deprecated in Gymnasium ≥ 0.27. Use `LunarLander-v3` instead (identical behaviour, updated version string).
 
 ---
 
 ## ▶️ How to Run
 
-1. Clone the repository
-```bash
-git clone <your-repo-url>
-cd project-reinforce-learning
-```
-
-2. Install dependencies
-```bash
-pip install gymnasium[box2d] tensorflow numpy matplotlib
-```
-
-3. Launch Jupyter
-```bash
-jupyter notebook reinforcement_learning.ipynb
-```
-
-4. Run all cells top to bottom (**Kernel → Restart & Run All**)
-
-> ⏱️ Training takes approximately **2–5 minutes** on a standard CPU with the default 150 episodes.
+1. Open `kajal_thesis.py` in Google Colab (or import it as a notebook).
+2. Run the first cell to install dependencies.
+3. When prompted by `files.upload()`, upload the DataCo Supply Chain Dataset CSV.
+4. Run all cells top to bottom.
+5. The script reproduces, in order: leakage removal → preprocessing/SMOTE → feature selection → model training (RF/LightGBM/CatBoost) → ensemble construction (Voting/Stacking) → cost-sensitive evaluation → threshold optimization → SHAP analysis → bootstrap validation.
 
 ---
 
-## 💾 Saving & Loading the Model
+## 🔁 Reproducibility
 
-The trained model is saved automatically at the end of the notebook:
-
-```python
-# Save
-agent.model.save('lunar_lander_dqn.h5')
-
-# Load later
-from tensorflow import keras
-loaded_model = keras.models.load_model('lunar_lander_dqn.h5')
-```
+Every random process (train-test split, SMOTE, model initialization, PCA, bootstrap resampling) uses a fixed seed: `random_state=42`.
 
 ---
 
-## 🏗️ End-to-End System Architecture
+## 🗺️ Code Section → Thesis Location Map
 
-```
-┌──────────────────────────────────────────────────────────────┐
-│                 TRAINING PHASE  (Cloud / GPU)                │
-│                                                              │
-│   LunarLander-v3  →  DQN Agent  →  Saved Policy (.h5)       │
-│   (Simulator)        (TensorFlow)   (Model export)          │
-└──────────────────────────────────────────────────────────────┘
-                              │
-                              │ Deploy (TFLite conversion)
-                              ▼
-┌──────────────────────────────────────────────────────────────┐
-│                INFERENCE PHASE  (Edge / On-Drone)            │
-│                                                              │
-│   Drone Sensors  →  Loaded Policy  →  Motor Commands        │
-│   (IMU, LiDAR)      (TFLite)          (Thruster 0–3)        │
-└──────────────────────────────────────────────────────────────┘
-
-         MONITORING:  Logs → Dashboard → Alert → Retrain
-```
-
-| Decision | Choice | Reason |
+| Code Section | Produces | Thesis Location |
 |:---|:---|:---|
-| Training location | Cloud GPU | DQN is compute-heavy |
-| Inference location | Edge device (on drone) | Real-time <5ms latency needed |
-| Model format | TFLite | Lightweight for embedded hardware |
-| Update frequency | Weekly retraining | Balance stability vs. adaptation |
-| Fallback | Rule-based PID controller | Safety net if RL policy fails |
+| Dataset upload | Raw data load, 180,519 records | Ch. 3.2 Dataset Selection |
+| Leaky vs. clean dataset prep | 4 leakage features removed | Ch. 3.4 Leakage Detection |
+| Leakage impact visualization | F1 1.0000 → 0.8836 plot | Figure 4.1, Ch. 4.1 |
+| Random Forest training | RF F1/ROC-AUC across feature sets | Table 4.1 |
+| Ensemble model building | Voting & Stacking training | Ch. 3.9, Table 4.2 |
+| Confusion matrix creation | Stacking confusion matrix | Figure 4.2 |
+| Business cost estimation | Cost comparison (\$5,616.82 etc.) | Figure 4.4, Ch. 4.7 |
+| Threshold evaluation | 0.25 lowest-cost threshold, 30.2% reduction | Figure 4.5, Ch. 4.8 |
+| Bootstrap confidence intervals | 95% CI [0.9684, 0.9714] | Figure 4.6, Ch. 4.9 |
+| SHAP analysis | Feature importance (0.1257, 0.0796) | Figure 4.3, Ch. 4.6 |
 
 ---
 
-## 📡 Monitoring & Maintenance
+## 📚 Key References
 
-| Metric | Normal Range | Alert Threshold | Action |
-|:---|:---|:---|:---|
-| Landing success rate | > 85% | < 75% | Schedule retraining |
-| Crash rate | < 5% | > 10% | Emergency shutdown |
-| Avg fuel usage | < 130 units | > 150 units | Investigate reward hacking |
-| Episode duration | < 600 steps | > 900 steps | Check hover behaviour |
+- Kaufman, S. et al. (2012) — data leakage taxonomy
+- Breiman, L. (2001) — Random Forest
+- Ke, G. et al. (2017) — LightGBM
+- Prokhorenkova, L. et al. (2018) — CatBoost
+- Lundberg, S. & Lee, S. (2017) — SHAP
+- Chawla, N. et al. (2002) — SMOTE
 
-**Drift Detection:** Rolling 7-day average monitored vs. baseline. Degradation > 15% triggers the retraining pipeline automatically.
-
-**After Repeated Failures:** Switch to PID fallback → alert human supervisor → collect failure logs → retrain with augmented data.
+(Full citation list in the thesis Bibliography.)
 
 ---
 
-## ⚖️ Ethics & Risk Analysis
+## 🧾 Generative AI Disclosure
 
-### 🦺 Safety
-- Human workers share warehouse airspace with drones
-- Hardware-level emergency kill switch operates independently of the RL policy
-- Geofencing ensures drones stay above worker zones until landing pad is clear
-- Mandatory LED and audio warnings active during all descent phases
-
-### ⚠️ Reward Hacking
-The agent may learn to **hover indefinitely** to avoid the -100 crash penalty — appearing "safe" while wasting fuel and blocking the pad.
-
-**Mitigations:**
-- Per-step time penalty (-0.1/step) to discourage hovering
-- Shaped reward for downward progress toward the pad
-- Maximum episode cap forces landing attempt
-
-### 🔍 Transparency
-- Every action, state, and reward logged with timestamp
-- Any crash episode can be replayed from stored logs
-- Model version tracked at each deployment — incidents are traceable
-
-### 👤 Responsibility Chain
-| Role | Responsibility |
-|:---|:---|
-| Fleet Manager | Reviews daily monitoring dashboard |
-| ML Engineer | Triggers retraining when metrics degrade |
-| Safety Officer | Authority to ground all drones immediately |
-| System | Never runs without a named human owner assigned |
+Generative AI tools were used during development for conceptual explanation, literature search/analysis, methodology guidance, code generation, visualization generation, and text structuring/editing — as disclosed in the thesis Affidavit and List of Generative AI Tool Usages.
 
 ---
 
-## 📋 Project Checklist
+## 📧 Contact
 
-| Deliverable | Status |
-|:---|:---|
-| Environment setup (LunarLander-v3) | ✅ Complete |
-| RL Problem Formulation + Mapping Table | ✅ Complete |
-| Business Interpretation | ✅ Complete |
-| DQN Implementation (TensorFlow) | ✅ Complete |
-| ε-greedy Exploration + Experience Replay | ✅ Complete |
-| Learning Curve Plot | ✅ Complete |
-| System Architecture Diagram | ✅ Complete |
-| Monitoring & Maintenance Section | ✅ Complete |
-| Ethics & Risk Analysis | ✅ Complete |
-| Model Save / Load | ✅ Complete |
-
----
-
-## 🛠️ Tech Stack
-
-| Tool | Version | Purpose |
-|:---|:---|:---|
-| Python | 3.10.10 | Core language |
-| TensorFlow / Keras | 2.20.0 | Neural network implementation |
-| Gymnasium | 1.2.3 | RL environment |
-| NumPy | 2.2.6 | Numerical operations |
-| Matplotlib | latest | Plotting & visualisation |
-
----
-
-## 📚 References
-
-- [Gymnasium LunarLander Documentation](https://gymnasium.farama.org/environments/box2d/lunar_lander/)
-- Mnih et al. (2015) — *Human-level control through deep reinforcement learning*, Nature
-- [TensorFlow Keras Documentation](https://www.tensorflow.org/api_docs/python/tf/keras)
-- Sutton & Barto — *Reinforcement Learning: An Introduction* (2nd Edition)
-
----
-
-<div align="center">
-
-*"A simple DQN with strong system design beats a complex model with weak real-world reasoning."*
-
-**SRH University · Divya Koriya· Reinforcement Learning · 27 February 2026**
-
-</div>
-
+For questions about this code, contact Kajal Anandani via SRH University Leipzig.
