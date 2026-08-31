@@ -65,7 +65,8 @@ https://colab.research.google.com/drive/1iJfIUQXHBm-Mdur4jDuVzzoFNRtCDsb9
 
 | Field | Details |
 |:---|:---|
-| **Dataset** | DataCo Supply Chain Dataset |
+| **Dataset** | DataCo Supply Chain Dataset (DataCoSupplyChainDataset.csv) |
+| **Source** | [Kaggle — DataCo Smart Supply Chain for Big Data Analysis](https://www.kaggle.com/datasets/shashwatwork/dataco-smart-supply-chain-for-big-data-analysis) |
 | **Records** | 180,519 individual orders |
 | **Initial features** | 53 |
 | **Access method in code** | `google.colab.files.upload()` — interactive upload inside Google Colab |
